@@ -1,0 +1,23 @@
+{
+  "name": "vlr-calendar",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Add single VLR.gg matches to Google Calendar",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "zip": "node scripts/build.mjs --zip",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint:firefox": "web-ext lint --source-dir dist/firefox"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "esbuild": "^0.28.2",
+    "jsdom": "^31.0.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1",
+    "web-ext": "^10.8.0"
+  }
+}
