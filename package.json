@@ -9,10 +9,12 @@
     "zip": "node scripts/build.mjs --zip",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint:firefox": "web-ext lint --source-dir dist/firefox"
+    "lint:firefox": "web-ext lint --source-dir dist/firefox",
+    "icons": "node scripts/icons.mjs"
   },
   "license": "MIT",
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^26.6.6",
     "esbuild": "^0.28.2",
     "jsdom": "^31.0.1",
