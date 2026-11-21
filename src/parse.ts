@@ -1,4 +1,4 @@
-import type { MatchInfo } from "./types";
+import type { MatchInfo, Stream } from "./types";
 
 const NY_FMT = new Intl.DateTimeFormat("en-US", {
   timeZone: "America/New_York",
@@ -137,5 +137,91 @@ export function parseBracketItem(a: HTMLAnchorElement): MatchInfo | null {
     team2: t2 || "TBD",
     startUtc,
     upcoming,
+  };
+}
+
+// ---------- extras: tags, links, streams, region ----------
+
+function absUrl(href: string | null | undefined): string | undefined {
+  if (!href) return undefined;
+  try {
+    return new URL(href, "https://www.vlr.gg/").toString();
+  } catch {
+    return undefined;
+  }
+}
+
+/** Team tags from the betting widget (lowercased name → tag), when VLR lists odds. */
+export function parseBetTags(doc: Document): Map<string, string> {
+  const map = new Map<string, string>();
+  doc.querySelectorAll(".match-bet-item-team").forEach((el) => {
+    const name = clean(el.querySelector(".match-bet-item-team-name")?.textContent).toLowerCase();
+    const tag = clean(el.querySelector(".match-bet-item-team-tag")?.textContent);
+    if (name && tag && !map.has(name)) map.set(name, tag);
+  });
+  return map;
+}
+
+/** Ordered rules for which streams to keep: the user's picks, then official channels. */
+const STREAM_RULES: ((tokens: string[], name: string) => boolean)[] = [
+  (t) => t.some((s) => s.includes("sliggy")),
+  (t) => t.some((s) => s === "fns" || /^fns(tv|_)/.test(s)),
+  (t) => t.some((s) => s.includes("ziks")),
+  (t) => t.some((s) => /^s0m/.test(s)),
+  (t, name) => t.some((s) => s.includes("valorant")) || /^(vct|val)\b/i.test(name),
+];
+
+const PLATFORM: Record<string, string> = { twitch: "Twitch", youtube: "YouTube", kick: "Kick" };
+
+export function parseStreams(doc: Document): Stream[] {
+  const out: { s: Stream; rank: number }[] = [];
+  const seen = new Set<string>();
+  const pane = doc.querySelector(".sm-pane-streams") ?? doc;
+  pane.querySelectorAll(".sm-btn").forEach((btn) => {
+    const url = absUrl(btn.querySelector("a.sm-ext")?.getAttribute("href"));
+    if (!url || seen.has(url)) return;
+    const name = clean(btn.querySelector(".sm-name")?.textContent);
+    const siteId = btn.querySelector("[data-site-id]")?.getAttribute("data-site-id") ?? "";
+    const slug = new URL(url).pathname.split("/").filter(Boolean).pop() ?? "";
+    const tokens = [name, siteId, slug].map((s) => s.toLowerCase().replace(/^@/, "")).filter(Boolean);
+    const rank = STREAM_RULES.findIndex((rule) => rule(tokens, name));
+    if (rank < 0) return;
+    const site = (btn.getAttribute("data-site") ?? "").toLowerCase();
+    const platform = PLATFORM[site] ?? (site ? site[0].toUpperCase() + site.slice(1) : "Stream");
+    seen.add(url);
+    out.push({ s: { name: name || slug, platform, url }, rank });
+  });
+  return out.sort((a, b) => a.rank - b.rank).map((x) => x.s);
+}
+
+/** VCT region from an event page breadcrumb ("Americas", "EMEA", "Pacific", "China"). */
+export function parseEventRegion(doc: Document): string | undefined {
+  return clean(doc.querySelector('.event-header-main-bc-tags a[href*="region="]')?.textContent) || undefined;
+}
+
+/** Short tag from a team page ("TB3"). */
+export function parseTeamTag(doc: Document): string | undefined {
+  return clean(doc.querySelector(".team-header-tag")?.textContent) || undefined;
+}
+
+/** Adds tags (from odds), stream links and event/team page links found on the match page. */
+export function parseMatchExtras(doc: Document, m: MatchInfo): MatchInfo {
+  const tags = parseBetTags(doc);
+  const ev = absUrl(doc.querySelector("a.match-header-event")?.getAttribute("href"));
+  let eventUrl: string | undefined;
+  if (ev) {
+    const p = new URL(ev).pathname.split("/").filter(Boolean); // event, id, slug, stage?
+    if (p[0] === "event" && /^\d+$/.test(p[1] ?? "")) {
+      eventUrl = `https://www.vlr.gg/event/${p[1]}${p[2] ? "/" + p[2] : ""}`;
+    }
+  }
+  return {
+    ...m,
+    tag1: tags.get(m.team1.toLowerCase()),
+    tag2: tags.get(m.team2.toLowerCase()),
+    streams: parseStreams(doc),
+    eventUrl,
+    team1Url: absUrl(doc.querySelector("a.match-header-link.mod-1")?.getAttribute("href")),
+    team2Url: absUrl(doc.querySelector("a.match-header-link.mod-2")?.getAttribute("href")),
   };
 }

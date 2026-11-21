@@ -10,7 +10,7 @@ Add individual VLR.gg Valorant matches to Google Calendar with one click.
 VLR Calendar adds a small "Add to Google Calendar" icon next to upcoming matches on vlr.gg.
 
 - Works on match pages, match lists and brackets
-- One click opens Google Calendar with a prefilled event: teams, event, start time and a link back to the match
+- One click opens Google Calendar with a prefilled event: a short title like "FLY vs NV - Americas", the full team and event names, the right length for Bo1/Bo3/Bo5, official stream links and a link back to the match
 - Times are converted correctly to your own timezone by Google Calendar
 - No account, no permissions, no tracking
 

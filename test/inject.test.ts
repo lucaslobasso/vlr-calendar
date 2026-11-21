@@ -78,7 +78,7 @@ describe("injectAll", () => {
     window.open = open as unknown as typeof window.open;
 
     const btn = document.querySelector<HTMLButtonElement>(".vlrcal-btn")!;
-    expect(btn.title).toBe("Add to Google Calendar");
+    expect(btn.getAttribute("aria-label")).toBe("Add to Google Calendar");
     const ev = new MouseEvent("click", { bubbles: true, cancelable: true });
     btn.dispatchEvent(ev);
     expect(ev.defaultPrevented).toBe(true);
@@ -102,6 +102,46 @@ describe("injectAll", () => {
     btn.click();
     await vi.waitFor(() => expect(btn.classList.contains("vlrcal-error")).toBe(true));
     expect(win.close).toHaveBeenCalled();
-    expect(btn.title).toBe("Couldn't read match time");
+    expect(btn.getAttribute("aria-label")).toBe("Couldn't read match time");
+  });
+
+  it("enriches with region (event page), tags and streams", async () => {
+    load("match.html"); // upcoming page provides the button; fetch serves the streams fixture
+    injectAll(document, loc("/55555/fly-vs-envy"));
+    const fetchMock = vi.fn(async (path: string) => {
+      const body =
+        path === "/55555" ? fx("match-streams.html") : path.startsWith("/event/") ? fx("event.html") : undefined;
+      return body ? { ok: true, text: async () => body } : { ok: false, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const win = { location: { href: "" }, close: vi.fn(), opener: {} };
+    window.open = vi.fn().mockReturnValue(win) as unknown as typeof window.open;
+
+    document.querySelector<HTMLButtonElement>(".vlrcal-btn")!.click();
+    await vi.waitFor(() => expect(win.location.href).toContain("calendar.google.com"));
+    const p = new URL(win.location.href).searchParams;
+    expect(p.get("text")).toBe("FLY vs ENVY - Americas");
+    expect(p.get("location")).toBeNull();
+    const details = p.get("details")!;
+    // only Red Bull streams on this match → filtered out, no stream block
+    expect(details).toBe(
+      "FlyQuest vs ENVY\nVCT 2027: America Kickoff - North America Qualifier Playoffs\n\nhttps://www.vlr.gg/55555",
+    );
+    // team pages not needed: tags came from the odds widget
+    expect(fetchMock.mock.calls.some(([u]) => String(u).startsWith("/team/"))).toBe(false);
+  });
+
+  it("shows a body-level tooltip on hover", () => {
+    load("matches.html");
+    injectAll(document, loc("/matches"));
+    const btn = document.querySelector<HTMLButtonElement>(".vlrcal-btn")!;
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, text: async () => "" }));
+    btn.dispatchEvent(new MouseEvent("mouseenter"));
+    const tip = document.querySelector(".vlrcal-tip");
+    expect(tip?.parentElement).toBe(document.body);
+    expect(tip?.classList.contains("vlrcal-tip-on")).toBe(true);
+    expect(tip?.textContent).toBe("Add to Google Calendar");
+    btn.dispatchEvent(new MouseEvent("mouseleave"));
+    expect(tip?.classList.contains("vlrcal-tip-on")).toBe(false);
   });
 });

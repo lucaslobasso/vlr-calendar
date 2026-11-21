@@ -15,17 +15,33 @@ function gcalDate(d: Date): string {
   return d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 }
 
+/** "FLY vs NV - Americas" (falls back to full names / no region). */
+export function buildTitle(m: MatchInfo): string {
+  const t = `${m.tag1 || m.team1} vs ${m.tag2 || m.team2}`;
+  return m.region ? `${t} - ${m.region}` : t;
+}
+
+/**
+ * Full team names
+ * Full event name
+ *
+ * Stream links (if any)
+ *
+ * VLR match link
+ */
+export function buildDetails(m: MatchInfo): string {
+  const head = [`${m.team1} vs ${m.team2}`, m.event].filter(Boolean).join("\n");
+  const streams = (m.streams ?? []).map((s) => `${s.name} (${s.platform}): ${s.url}`).join("\n");
+  return [head, streams, m.url].filter(Boolean).join("\n\n");
+}
+
 export function buildGoogleUrl(m: MatchInfo): string {
   const end = new Date(m.startUtc.getTime() + durationMinutes(m.bestOf) * 60_000);
-  const text = `${m.team1} vs ${m.team2}` + (m.event ? ` — ${m.event}` : "");
-  const meta = [m.stage, m.bestOf ? `Bo${m.bestOf}` : undefined].filter(Boolean).join(" · ");
-  const details = meta ? `${meta}\n\n${m.url}` : m.url;
   const params = new URLSearchParams({
     action: "TEMPLATE",
-    text,
+    text: buildTitle(m),
     dates: `${gcalDate(m.startUtc)}/${gcalDate(end)}`,
-    details,
-    location: m.url,
+    details: buildDetails(m),
   });
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
