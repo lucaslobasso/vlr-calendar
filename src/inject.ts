@@ -6,9 +6,24 @@ const TIP = "Add to Google Calendar";
 const TIP_ERR = "Couldn't read match time";
 const MARK = "data-vlrcal";
 
-const ICON =
-  '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-  '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 13v6M9 16h6"/></svg>';
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function makeIcon(): SVGSVGElement {
+  const el = (tag: string, attrs: Record<string, string>) => {
+    const e = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    return e;
+  };
+  const svg = el("svg", {
+    viewBox: "0 0 24 24", width: "14", height: "14", fill: "none", stroke: "currentColor",
+    "stroke-width": "2", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true",
+  }) as SVGSVGElement;
+  svg.append(
+    el("rect", { x: "3", y: "4", width: "18", height: "18", rx: "2" }),
+    el("path", { d: "M16 2v4M8 2v4M3 10h18M12 13v6M9 16h6" }),
+  );
+  return svg;
+}
 
 const promises = new Map<string, Promise<MatchInfo | null>>();
 const resolved = new Map<string, MatchInfo>();
@@ -59,7 +74,7 @@ function makeButton(id: string, anchor: Element | null): HTMLButtonElement {
   const btn = document.createElement("button");
   btn.type = "button";
   btn.className = "vlrcal-btn";
-  btn.innerHTML = ICON;
+  btn.appendChild(makeIcon());
   setError(btn, false);
   const warm = () => void prefetch(id, anchor);
   btn.addEventListener("mouseenter", warm);
