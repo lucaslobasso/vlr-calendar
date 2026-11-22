@@ -139,3 +139,56 @@ export function parseBracketItem(a: HTMLAnchorElement): MatchInfo | null {
     upcoming,
   };
 }
+
+// ---------- extras: tags, links, streams, region ----------
+
+function absUrl(href: string | null | undefined): string | undefined {
+  if (!href) return undefined;
+  try {
+    return new URL(href, "https://www.vlr.gg/").toString();
+  } catch {
+    return undefined;
+  }
+}
+
+/** Team tags from the betting widget (lowercased name → tag), when VLR lists odds. */
+export function parseBetTags(doc: Document): Map<string, string> {
+  const map = new Map<string, string>();
+  doc.querySelectorAll(".match-bet-item-team").forEach((el) => {
+    const name = clean(el.querySelector(".match-bet-item-team-name")?.textContent).toLowerCase();
+    const tag = clean(el.querySelector(".match-bet-item-team-tag")?.textContent);
+    if (name && tag && !map.has(name)) map.set(name, tag);
+  });
+  return map;
+}
+
+/** VCT region from an event page breadcrumb ("Americas", "EMEA", "Pacific", "China"). */
+export function parseEventRegion(doc: Document): string | undefined {
+  return clean(doc.querySelector('.event-header-main-bc-tags a[href*="region="]')?.textContent) || undefined;
+}
+
+/** Short tag from a team page ("TB3"). */
+export function parseTeamTag(doc: Document): string | undefined {
+  return clean(doc.querySelector(".team-header-tag")?.textContent) || undefined;
+}
+
+/** Adds tags (from odds) and event/team page links found on the match page. */
+export function parseMatchExtras(doc: Document, m: MatchInfo): MatchInfo {
+  const tags = parseBetTags(doc);
+  const ev = absUrl(doc.querySelector("a.match-header-event")?.getAttribute("href"));
+  let eventUrl: string | undefined;
+  if (ev) {
+    const p = new URL(ev).pathname.split("/").filter(Boolean); // event, id, slug, stage?
+    if (p[0] === "event" && /^\d+$/.test(p[1] ?? "")) {
+      eventUrl = `https://www.vlr.gg/event/${p[1]}${p[2] ? "/" + p[2] : ""}`;
+    }
+  }
+  return {
+    ...m,
+    tag1: tags.get(m.team1.toLowerCase()),
+    tag2: tags.get(m.team2.toLowerCase()),
+    eventUrl,
+    team1Url: absUrl(doc.querySelector("a.match-header-link.mod-1")?.getAttribute("href")),
+    team2Url: absUrl(doc.querySelector("a.match-header-link.mod-2")?.getAttribute("href")),
+  };
+}

@@ -4,7 +4,9 @@ A small browser extension that adds an "Add to Google Calendar" icon to upcoming
 
 Works in Chrome (and Chromium browsers) and Firefox/Zen. No permissions, no data collected.
 
-> Screenshots: to be added (see `store/listing.md` for the capture list).
+![Calendar icons on the VLR.gg match list](store/screenshots/1-matches.png)
+
+The event it creates is titled like `TSB vs HZ - Pacific` (team tags and VCT region). The description holds the full team names, the event name and the VLR link, and the length follows the format: Bo1 = 1h15, Bo3 = 3h, Bo5 = 5h.
 
 ## Install for local testing
 
@@ -27,6 +29,8 @@ npm run icons      # regenerate PNGs from icons/icon.svg
 ## Publishing
 
 `npm run zip` writes `web-ext-artifacts/vlr-calendar-chrome-<version>.zip` and `vlr-calendar-firefox-<version>.zip`. Upload them to the Chrome Web Store dashboard and AMO, using `store/listing.md` for the listing text and `PRIVACY.md` as the privacy policy. The code is not minified, so no separate source upload is needed.
+
+CI (`.github/workflows/ci.yml`) typechecks, tests, builds and lints every push and PR. Pushing a `v*` tag also attaches both zips to the matching GitHub release.
 
 ## Timezones
 

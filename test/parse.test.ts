@@ -1,6 +1,28 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { easternToUtc, matchIdFromHref, parseBracketItem, parseMatchPage } from "../src/parse";
+import {
+  easternToUtc,
+  matchIdFromHref,
+  parseBracketItem,
+  parseMatchPage,
+  parseMatchExtras,
+  parseEventRegion,
+  parseTeamTag,
+} from "../src/parse";
+
+describe("extras", () => {
+  it("reads tags from odds, event url and team urls", () => {
+    const doc = load("match-streams.html");
+    const m = parseMatchExtras(doc, parseMatchPage(doc, "https://www.vlr.gg/792904/x")!);
+    expect([m.tag1, m.tag2]).toEqual(["FLY", "ENVY"]);
+    expect(m.eventUrl).toBe("https://www.vlr.gg/event/3179/vct-2027-america-kickoff-north-america-qualifier-playoffs");
+    expect(m.team1Url).toBe("https://www.vlr.gg/team/21838/flyquest");
+  });
+  it("reads region from event page and tag from team page", () => {
+    expect(parseEventRegion(load("event.html"))).toBe("Americas");
+    expect(parseTeamTag(load("team.html"))).toBe("TB3");
+  });
+});
 
 const load = (name: string) =>
   new DOMParser().parseFromString(readFileSync(join(__dirname, "fixtures", name), "utf8"), "text/html");
