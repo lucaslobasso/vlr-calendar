@@ -105,7 +105,7 @@ describe("injectAll", () => {
     expect(btn.getAttribute("aria-label")).toBe("Couldn't read match time");
   });
 
-  it("enriches with region (event page), tags and streams", async () => {
+  it("enriches with region (event page) and tags", async () => {
     load("match.html"); // upcoming page provides the button; fetch serves the streams fixture
     injectAll(document, loc("/55555/fly-vs-envy"));
     const fetchMock = vi.fn(async (path: string) => {
@@ -123,7 +123,6 @@ describe("injectAll", () => {
     expect(p.get("text")).toBe("FLY vs ENVY - Americas");
     expect(p.get("location")).toBeNull();
     const details = p.get("details")!;
-    // only Red Bull streams on this match → filtered out, no stream block
     expect(details).toBe(
       "FlyQuest vs ENVY\nVCT 2027: America Kickoff - North America Qualifier Playoffs\n\nhttps://www.vlr.gg/55555",
     );

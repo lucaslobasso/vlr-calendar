@@ -6,43 +6,9 @@ import {
   parseBracketItem,
   parseMatchPage,
   parseMatchExtras,
-  parseStreams,
   parseEventRegion,
   parseTeamTag,
 } from "../src/parse";
-
-const btn = (site: string, id: string, name: string, href: string) =>
-  `<div class="sm-btn" data-site="${site}"><div class="sm-body" data-site-id="${id}"><span class="sm-name">${name}</span></div><a class="sm-ext" href="${href}"></a></div>`;
-
-describe("parseStreams", () => {
-  it("keeps Sliggy, FNS, Ziks, s0m and official channels, in that order", () => {
-    const html =
-      `<div class="sm-pane sm-pane-streams">` +
-      btn("twitch", "valorant_americas", "VCT Americas", "https://www.twitch.tv/valorant_americas") +
-      btn("twitch", "redbull", "Red Bull", "https://www.twitch.tv/redbull") +
-      btn("twitch", "s0mcs", "s0m", "https://www.twitch.tv/s0mcs") +
-      btn("twitch", "ziksdotgg", "Ziks", "https://www.twitch.tv/ziksdotgg") +
-      btn("twitch", "fns", "FNS", "https://www.twitch.tv/fns") +
-      btn("twitch", "sliggytv", "Sliggy", "https://www.twitch.tv/sliggytv") +
-      btn("youtube", "UCx", "VAL BR", "https://www.youtube.com/@valorant_br/live") +
-      btn("twitch", "fnsfan", "fnsfan", "https://www.twitch.tv/fnsfan") +
-      `</div><div class="sm-pane sm-pane-vods">` +
-      btn("twitch", "sliggytv", "Sliggy", "https://www.twitch.tv/videos/1") +
-      `</div>`;
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    expect(parseStreams(doc).map((s) => `${s.name}|${s.platform}`)).toEqual([
-      "Sliggy|Twitch",
-      "FNS|Twitch",
-      "Ziks|Twitch",
-      "s0m|Twitch",
-      "VCT Americas|Twitch",
-      "VAL BR|YouTube",
-    ]);
-  });
-  it("filters out non-listed streams on a real page", () => {
-    expect(parseStreams(load("match-streams.html"))).toEqual([]);
-  });
-});
 
 describe("extras", () => {
   it("reads tags from odds, event url and team urls", () => {

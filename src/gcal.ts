@@ -25,14 +25,11 @@ export function buildTitle(m: MatchInfo): string {
  * Full team names
  * Full event name
  *
- * Stream links (if any)
- *
  * VLR match link
  */
 export function buildDetails(m: MatchInfo): string {
   const head = [`${m.team1} vs ${m.team2}`, m.event].filter(Boolean).join("\n");
-  const streams = (m.streams ?? []).map((s) => `${s.name} (${s.platform}): ${s.url}`).join("\n");
-  return [head, streams, m.url].filter(Boolean).join("\n\n");
+  return `${head}\n\n${m.url}`;
 }
 
 export function buildGoogleUrl(m: MatchInfo): string {

@@ -28,6 +28,8 @@ npm run icons      # regenerate PNGs from icons/icon.svg
 
 `npm run zip` writes `web-ext-artifacts/vlr-calendar-chrome-<version>.zip` and `vlr-calendar-firefox-<version>.zip`. Upload them to the Chrome Web Store dashboard and AMO, using `store/listing.md` for the listing text and `PRIVACY.md` as the privacy policy. The code is not minified, so no separate source upload is needed.
 
+CI (`.github/workflows/ci.yml`) typechecks, tests, builds and lints every push and PR. Pushing a `v*` tag also attaches both zips to the matching GitHub release.
+
 ## Timezones
 
 On match pages, vlr.gg's `data-utc-ts` timestamps are in US Eastern time (despite the name). The extension converts them correctly to UTC for the calendar event.

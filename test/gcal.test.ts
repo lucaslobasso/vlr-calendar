@@ -12,10 +12,6 @@ const base: MatchInfo = {
   event: "VCT 2027: America Kickoff - North America Qualifier Playoffs",
   stage: "Playoffs: Round 2",
   bestOf: 3,
-  streams: [
-    { name: "VCT Americas", platform: "Twitch", url: "https://www.twitch.tv/valorant_americas" },
-    { name: "VCT Americas", platform: "YouTube", url: "https://www.youtube.com/@valorant_americas/live" },
-  ],
   startUtc: new Date("2026-11-21T23:00:00Z"),
   upcoming: true,
 };
@@ -36,21 +32,13 @@ describe("buildTitle", () => {
 });
 
 describe("buildDetails", () => {
-  it("names, event, blank, streams, blank, link", () => {
+  it("names, event, blank, link", () => {
     expect(buildDetails(base)).toBe(
-      [
-        "FlyQuest vs ENVY",
-        "VCT 2027: America Kickoff - North America Qualifier Playoffs",
-        "",
-        "VCT Americas (Twitch): https://www.twitch.tv/valorant_americas",
-        "VCT Americas (YouTube): https://www.youtube.com/@valorant_americas/live",
-        "",
-        base.url,
-      ].join("\n"),
+      ["FlyQuest vs ENVY", "VCT 2027: America Kickoff - North America Qualifier Playoffs", "", base.url].join("\n"),
     );
   });
-  it("skips the stream block when there are none", () => {
-    expect(buildDetails({ ...base, streams: [], event: undefined })).toBe(`FlyQuest vs ENVY\n\n${base.url}`);
+  it("skips the event line when unknown", () => {
+    expect(buildDetails({ ...base, event: undefined })).toBe(`FlyQuest vs ENVY\n\n${base.url}`);
   });
 });
 
